@@ -34,7 +34,7 @@
 <body>
     <div id="satellite-widget">
         <h3>Latest SST Image - Cape Hatteras</h3>
-        <img id="satellite-image" src="" alt="Loading Latest Satellite Image...">
+        <img id="satellite-image" src="" alt="Latest Satellite Image">
         <p id="image-url"></p>
         <div id="debug-info">Loading debug info...</div>
     </div>
@@ -50,7 +50,7 @@
             // Subtract 2.5 hours (always using UTC)
             let adjustedTime = new Date(now.getTime() - (2 * 60 * 60 * 1000 + 30 * 60 * 1000));
             let hours = adjustedTime.getUTCHours();
-            const minutes = "30"; // Always use hh30 format
+            const minutes = "30"; // Always use :30 minute mark
 
             let attempts = 0;
             let maxAttempts = 5; // Try up to 5 hours back if needed
@@ -93,7 +93,7 @@
                 Adjusted UTC Hour: ${hours}<br>
                 Fixed Minutes: ${minutes}<br>
                 Attempts Made: ${attempts}<br>
-                Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
+                Final Image URL: <br> ${imageUrl}
             `;
         }
 
