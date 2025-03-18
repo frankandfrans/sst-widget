@@ -82,20 +82,9 @@
 
             // Display the final image and URL
             document.getElementById("satellite-image").src = imageUrl;
-            document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
+           
 
-            // Debugging information display
-            document.getElementById("debug-info").innerHTML = `
-                <strong>Debug Info:</strong><br>
-                UTC Year: ${year}<br>
-                UTC Month: ${month}<br>
-                UTC Day: ${day}<br>
-                Adjusted UTC Hour: ${hours}<br>
-                Fixed Minutes: ${minutes}<br>
-                Attempts Made: ${attempts}<br>
-                Final Image URL: <br> ${imageUrl}
-            `;
-        }
+                  }
 
         // Run script after page load
         window.onload = getLatestImageUrl;
