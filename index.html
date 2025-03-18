@@ -1,53 +1,104 @@
-import requests
-from datetime import datetime, timedelta
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest SST Image</title>
+    <style>
+        #satellite-widget {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        #debug-info {
+            font-size: 14px;
+            color: red;
+            background: #f8f8f8;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="satellite-widget">
+        <h3>Latest SST Image - Cape Hatteras</h3>
+        <img id="satellite-image" src="" alt="Loading Latest Satellite Image...">
+        <p id="image-url"></p>
+        <div id="debug-info">Loading debug info...</div>
+    </div>
 
-# Get current UTC time and subtract 2.5 hours
-adjusted_time = datetime.utcnow() - timedelta(hours=2, minutes=30)
+    <script>
+        async function getLatestImageUrl() {
+            let now = new Date();
+            let year = now.getUTCFullYear().toString().slice(-2);
+            let month = String(now.getUTCMonth() + 1).padStart(2, '0');
+            let day = String(now.getUTCDate()).padStart(2, '0');
+            let yymmdd = `${year}${month}${day}`;
 
-# Extract date components
-year = str(adjusted_time.year)[-2:]
-month = f"{adjusted_time.month:02}"
-day = f"{adjusted_time.day:02}"
-yymmdd = f"{year}{month}{day}"
+            // Subtract 2.5 hours (always using UTC)
+            let adjustedTime = new Date(now.getTime() - (2 * 60 * 60 * 1000 + 30 * 60 * 1000));
+            let hours = adjustedTime.getUTCHours();
+            const minutes = "30"; // Always use hh30 format
 
-# Always set minutes to 30
-minutes = "30"
-hours = adjusted_time.hour
+            let attempts = 0;
+            let maxAttempts = 5; // Try up to 5 hours back if needed
+            let imageUrl = "";
 
-# Adjust for day rollover if needed
-if hours < 0:
-    hours = 23
-    adjusted_time -= timedelta(days=1)
-    yymmdd = f"{str(adjusted_time.year)[-2:]}{adjusted_time.month:02}{adjusted_time.day:02}"
+            while (attempts < maxAttempts) {
+                let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
+                imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
 
-# Try up to 5 previous hours if the URL does not exist
-max_attempts = 5
-attempts = 0
-image_url = ""
+                // Check if the URL is valid
+                try {
+                    let response = await fetch(imageUrl, { method: 'HEAD' });
+                    if (response.ok) {
+                        break; // Exit loop if the URL is valid
+                    }
+                } catch (error) {
+                    console.log("Error checking URL:", error);
+                }
 
-while attempts < max_attempts:
-    hhmm = f"{hours:02}{minutes}"
-    image_url = f"https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/{yymmdd}.077.{hhmm}.n00.jpg"
+                // If URL is not found, subtract 1 hour and try again
+                hours -= 1;
+                if (hours < 0) {
+                    hours = 23;
+                    now.setUTCDate(now.getUTCDate() - 1);
+                    yymmdd = `${String(now.getUTCFullYear()).slice(-2)}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}`;
+                }
+                attempts++;
+            }
 
-    # Check if the URL is valid
-    try:
-        response = requests.head(image_url)
-        if response.status_code == 200:
-            break  # Found a valid URL
-    except requests.RequestException:
-        pass  # Ignore request errors and continue
+            // Display the final image and URL
+            document.getElementById("satellite-image").src = imageUrl;
+            document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
 
-    # If not found, subtract an hour and try again
-    hours -= 1
-    if hours < 0:
-        hours = 23
-        adjusted_time -= timedelta(days=1)
-        yymmdd = f"{str(adjusted_time.year)[-2:]}{adjusted_time.month:02}{adjusted_time.day:02}"
-    
-    attempts += 1
+            // Debugging information display
+            document.getElementById("debug-info").innerHTML = `
+                <strong>Debug Info:</strong><br>
+                UTC Year: ${year}<br>
+                UTC Month: ${month}<br>
+                UTC Day: ${day}<br>
+                Adjusted UTC Hour: ${hours}<br>
+                Fixed Minutes: ${minutes}<br>
+                Attempts Made: ${attempts}<br>
+                Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
+            `;
+        }
 
-# Output the final valid image URL
-print(image_url)
-
-           
-   
+        // Run script after page load
+        window.onload = getLatestImageUrl;
+    </script>
+</body>
+</html>
