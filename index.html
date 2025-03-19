@@ -55,36 +55,8 @@
             let hours = adjustedTime.getUTCHours();
             const minutes = "30"; // Always use :30 minute mark
 
-            let attempts = 0;
-            let maxAttempts = 5; // Try up to 5 hours back if needed
-            let imageUrl = "";
-
-            while (attempts < maxAttempts) {
-                let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
-                imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
-
-                // Check if the URL is valid
-                try {
-                    let response = await fetch(imageUrl, { method: 'HEAD' });
-                    if (response.ok) {
-                        break; // Exit loop if the URL is valid
-                    }
-                } catch (error) {
-                    console.log("Error checking URL:", error);
-                }
-
-                // If URL is not found, subtract 1 hour and try again
-                hours -= 1;
-                if (hours < 0) {
-                    hours = 23;
-                    adjustedTime.setUTCDate(adjustedTime.getUTCDate() - 1);
-                    year = adjustedTime.getUTCFullYear().toString().slice(-2);
-                    month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
-                    day = String(adjustedTime.getUTCDate()).padStart(2, '0');
-                    yymmdd = `${year}${month}${day}`;
-                }
-                attempts++;
-            }
+            let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
+            let imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
 
             // Display the final image and URL
             document.getElementById("satellite-image").src = imageUrl;
@@ -98,7 +70,6 @@
                 Adjusted UTC Day: ${day}<br>
                 Adjusted UTC Hour: ${hours}<br>
                 Fixed Minutes: ${minutes}<br>
-                Attempts Made: ${attempts}<br>
                 Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
             `;
         }
@@ -108,3 +79,4 @@
     </script>
 </body>
 </html>
+
