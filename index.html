@@ -36,91 +36,53 @@
 <body>
     <div id="satellite-widget">
         <h3>Latest SST Image - Cape Hatteras</h3>
-        <img id="satellite-image" src="" alt="Latest Satellite Image">
+        <img id="satellite-image" src="" alt="Loading Latest Satellite Image...">
         <p id="image-url">Checking for latest available image...</p>
         <div id="debug-info">Loading debug info...</div>
     </div>
 
     <script>
-        async function getLatestImageUrl() {
-            let now = new Date();
-            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000)); // Subtract 4 hours from UTC
-            
-            let attempts = 0;
-            let maxAttempts = 5;
-            let imageUrl = "";
-            let validUrlFound = false;
-            let debugLog = "<strong>Debug Attempts:</strong><br>";
+        async function fetchLatestImage() {
+            const directoryUrl = "https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
 
-            while (attempts < maxAttempts) {
-                // Extract adjusted date and time
-                let year = adjustedTime.getUTCFullYear().toString().slice(-2);
-                let month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
-                let day = String(adjustedTime.getUTCDate()).padStart(2, '0');
-                let yymmdd = `${year}${month}${day}`;
+            try {
+                let response = await fetch(directoryUrl);
+                let text = await response.text();
 
-                let hours = adjustedTime.getUTCHours();
-                const minutes = "30"; // Always use :30 minute mark
-                let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
-                imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
+                // Extract last image file link using regex
+                let matches = text.match(/(\d{6}\.077\.\d{4}\.n00\.jpg)/g);
+                
+                if (matches && matches.length > 0) {
+                    let latestImage = matches[matches.length - 1]; // Get the last image link
+                    let imageUrl = directoryUrl + latestImage;
 
-                // Check if the URL is valid
-                try {
-                    let response = await fetch(imageUrl, { method: 'HEAD', cache: 'no-store' });
-                    if (response.ok) {
-                        validUrlFound = true;
-                        break; // Exit loop if the URL is valid
-                    } else {
-                        debugLog += `❌ Attempt ${attempts + 1}: Not Found -> ${imageUrl}<br>`;
-                        console.log(`❌ Attempt ${attempts + 1}: Not Found -> ${imageUrl}`);
-                    }
-                } catch (error) {
-                    debugLog += `⚠️ Error Attempt ${attempts + 1}: ${error.message}<br>`;
-                    console.log(`⚠️ Error Attempt ${attempts + 1}:`, error);
+                    // Update image and display
+                    let imgElement = document.getElementById("satellite-image");
+                    imgElement.src = imageUrl;
+                    imgElement.style.display = "block"; // Show image
+
+                    document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
+                    document.getElementById("debug-info").innerHTML = `
+                        <strong>Latest Available Image Found:</strong><br>
+                        <a href="${imageUrl}" target="_blank">${imageUrl}</a>
+                    `;
+                } else {
+                    throw new Error("No image found in directory listing.");
                 }
-
-                // If URL is not found, subtract 1 hour and try again
-                adjustedTime.setUTCHours(adjustedTime.getUTCHours() - 1);
-
-                // Handle crossing midnight UTC
-                if (adjustedTime.getUTCHours() === 23) {
-                    adjustedTime.setUTCDate(adjustedTime.getUTCDate() - 1);
-                }
-
-                attempts++;
-            }
-
-            if (!validUrlFound) {
-                // If no valid image was found after max attempts, show a message
+            } catch (error) {
                 document.getElementById("satellite-image").style.display = "none";
                 document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
-                document.getElementById("debug-info").innerHTML = debugLog + `<br><strong>No valid image found after ${maxAttempts} attempts.</strong>`;
-            } else {
-                // Display the final valid image and URL
-                let imgElement = document.getElementById("satellite-image");
-                imgElement.src = imageUrl;
-                imgElement.style.display = "block"; // Show image after finding a valid one
-
-                document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-                document.getElementById("debug-info").innerHTML = debugLog + `
-                    <strong>Final Valid Image Found:</strong><br>
-                    Adjusted UTC Year: ${adjustedTime.getUTCFullYear().toString().slice(-2)}<br>
-                    Adjusted UTC Month: ${String(adjustedTime.getUTCMonth() + 1).padStart(2, '0')}<br>
-                    Adjusted UTC Day: ${String(adjustedTime.getUTCDate()).padStart(2, '0')}<br>
-                    Adjusted UTC Hour: ${String(adjustedTime.getUTCHours()).padStart(2, '0')}<br>
-                    Fixed Minutes: ${minutes}<br>
-                    Attempts Made: ${attempts + 1}<br>
-                    <strong>Final Valid Image URL:</strong><br>
-                    <a href="${imageUrl}" target="_blank">${imageUrl}</a>
-                `;
+                document.getElementById("debug-info").innerHTML = `<strong>Error:</strong> ${error.message}`;
+                console.error("Error fetching latest image:", error);
             }
         }
 
         // Run script after page load
-        window.onload = getLatestImageUrl;
+        window.onload = fetchLatestImage;
     </script>
 </body>
 </html>
+
 
 
 
