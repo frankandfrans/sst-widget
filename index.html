@@ -20,7 +20,7 @@
             width: 100%;
             height: auto;
             border-radius: 5px;
-            display: none; /* Hide image initially until valid one is found */
+            display: none; /* Hide image initially until a valid one is found */
         }
         #debug-info {
             font-size: 14px;
@@ -50,6 +50,7 @@
             let maxAttempts = 5;
             let imageUrl = "";
             let validUrlFound = false;
+            let debugLog = "<strong>Debug Attempts:</strong><br>";
 
             while (attempts < maxAttempts) {
                 // Extract adjusted date and time
@@ -70,14 +71,22 @@
                         validUrlFound = true;
                         break; // Exit loop if the URL is valid
                     } else {
+                        debugLog += `❌ Attempt ${attempts + 1}: Not Found -> ${imageUrl}<br>`;
                         console.log(`❌ Attempt ${attempts + 1}: Not Found -> ${imageUrl}`);
                     }
                 } catch (error) {
-                    console.log("Error checking URL:", error);
+                    debugLog += `⚠️ Error Attempt ${attempts + 1}: ${error.message}<br>`;
+                    console.log(`⚠️ Error Attempt ${attempts + 1}:`, error);
                 }
 
                 // If URL is not found, subtract 1 hour and try again
                 adjustedTime.setUTCHours(adjustedTime.getUTCHours() - 1);
+
+                // Handle crossing midnight UTC
+                if (adjustedTime.getUTCHours() === 23) {
+                    adjustedTime.setUTCDate(adjustedTime.getUTCDate() - 1);
+                }
+
                 attempts++;
             }
 
@@ -85,7 +94,7 @@
                 // If no valid image was found after max attempts, show a message
                 document.getElementById("satellite-image").style.display = "none";
                 document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
-                document.getElementById("debug-info").innerHTML = `<strong>Debug Info:</strong> No valid image found after ${maxAttempts} attempts.`;
+                document.getElementById("debug-info").innerHTML = debugLog + `<br><strong>No valid image found after ${maxAttempts} attempts.</strong>`;
             } else {
                 // Display the final valid image and URL
                 let imgElement = document.getElementById("satellite-image");
@@ -93,8 +102,8 @@
                 imgElement.style.display = "block"; // Show image after finding a valid one
 
                 document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-                document.getElementById("debug-info").innerHTML = `
-                    <strong>Debug Info:</strong><br>
+                document.getElementById("debug-info").innerHTML = debugLog + `
+                    <strong>Final Valid Image Found:</strong><br>
                     Adjusted UTC Year: ${adjustedTime.getUTCFullYear().toString().slice(-2)}<br>
                     Adjusted UTC Month: ${String(adjustedTime.getUTCMonth() + 1).padStart(2, '0')}<br>
                     Adjusted UTC Day: ${String(adjustedTime.getUTCDate()).padStart(2, '0')}<br>
@@ -112,6 +121,7 @@
     </script>
 </body>
 </html>
+
 
 
 
