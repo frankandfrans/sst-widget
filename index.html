@@ -42,36 +42,57 @@
     <script>
         async function getLatestImageUrl() {
             let now = new Date();
+            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000)); // Subtract 4 hours from UTC
+            
+            let attempts = 0;
+            let maxAttempts = 5;
+            let imageUrl = "";
+            let validUrlFound = false;
 
-            // Adjust time: Subtract 4 hours from UTC
-            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
+            while (attempts < maxAttempts) {
+                // Extract adjusted date and time
+                let year = adjustedTime.getUTCFullYear().toString().slice(-2);
+                let month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
+                let day = String(adjustedTime.getUTCDate()).padStart(2, '0');
+                let yymmdd = `${year}${month}${day}`;
 
-            // Extract components from adjusted time
-            let year = adjustedTime.getUTCFullYear().toString().slice(-2);
-            let month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
-            let day = String(adjustedTime.getUTCDate()).padStart(2, '0');
-            let yymmdd = `${year}${month}${day}`;
+                let hours = adjustedTime.getUTCHours();
+                const minutes = "30"; // Always use :30 minute mark
+                let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
+                imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
 
-            let hours = adjustedTime.getUTCHours();
-            const minutes = "30"; // Always use :30 minute mark
+                // Check if the URL is valid
+                try {
+                    let response = await fetch(imageUrl, { method: 'HEAD' });
+                    if (response.ok) {
+                        validUrlFound = true;
+                        break; // Exit loop if the URL is valid
+                    }
+                } catch (error) {
+                    console.log("Error checking URL:", error);
+                }
 
-            let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
-            let imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
+                // If URL is not found, subtract 1 hour and try again
+                adjustedTime.setUTCHours(adjustedTime.getUTCHours() - 1);
+                attempts++;
+            }
 
-            // Display the final image and URL
-            document.getElementById("satellite-image").src = imageUrl;
-            document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-
-            // Debugging information display
-            document.getElementById("debug-info").innerHTML = `
-                <strong>Debug Info:</strong><br>
-                Adjusted UTC Year: ${year}<br>
-                Adjusted UTC Month: ${month}<br>
-                Adjusted UTC Day: ${day}<br>
-                Adjusted UTC Hour: ${hours}<br>
-                Fixed Minutes: ${minutes}<br>
-                Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
-            `;
+            if (!validUrlFound) {
+                // If no valid image was found after max attempts, show a message
+                document.getElementById("satellite-image").style.display = "none";
+                document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
+                document.getElementById("debug-info").innerHTML = `<strong>Debug Info:</strong> No valid image found after ${maxAttempts} attempts.`;
+            } else {
+                // Display the final valid image and URL
+                document.getElementById("satellite-image").src = imageUrl;
+                document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
+                document.getElementById("debug-info").innerHTML = `
+                    <strong>Debug Info:</strong><br>
+                    Final Valid Image Found:<br>
+                    <a href="${imageUrl}" target="_blank">${imageUrl}</a><br>
+                    Attempts Made: ${attempts}
+                `;
+            }
         }
 
         // Run script after page load
@@ -79,4 +100,5 @@
     </script>
 </body>
 </html>
+
 
