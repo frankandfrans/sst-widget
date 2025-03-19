@@ -20,14 +20,23 @@
             height: auto;
             border-radius: 5px;
         }
-       
+        #debug-info {
+            font-size: 14px;
+            color: red;
+            background: #f8f8f8;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
     <div id="satellite-widget">
         <h3>Latest SST Image - Cape Hatteras</h3>
-        <img id="satellite-image" src="" alt="Latest Satellite Image">
+        <img id="satellite-image" src="" alt="Loading Latest Satellite Image...">
         <p id="image-url"></p>
+        <div id="debug-info">Loading debug info...</div>
     </div>
 
     <script>
@@ -38,8 +47,8 @@
             let day = String(now.getUTCDate()).padStart(2, '0');
             let yymmdd = `${year}${month}${day}`;
 
-            // Subtract 2.5 hours (always using UTC)
-            let adjustedTime = new Date(now.getTime() - (2 * 60 * 60 * 1000 + 30 * 60 * 1000));
+            // Subtract 4 hours from UTC time
+            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
             let hours = adjustedTime.getUTCHours();
             const minutes = "30"; // Always use :30 minute mark
 
@@ -73,9 +82,20 @@
 
             // Display the final image and URL
             document.getElementById("satellite-image").src = imageUrl;
-           
+            document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
 
-                  }
+            // Debugging information display
+            document.getElementById("debug-info").innerHTML = `
+                <strong>Debug Info:</strong><br>
+                UTC Year: ${year}<br>
+                UTC Month: ${month}<br>
+                UTC Day: ${day}<br>
+                Adjusted UTC Hour: ${hours}<br>
+                Fixed Minutes: ${minutes}<br>
+                Attempts Made: ${attempts}<br>
+                Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
+            `;
+        }
 
         // Run script after page load
         window.onload = getLatestImageUrl;
