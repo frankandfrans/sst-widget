@@ -42,13 +42,16 @@
     <script>
         async function getLatestImageUrl() {
             let now = new Date();
-            let year = now.getUTCFullYear().toString().slice(-2);
-            let month = String(now.getUTCMonth() + 1).padStart(2, '0');
-            let day = String(now.getUTCDate()).padStart(2, '0');
+
+            // Adjust time: Subtract 4 hours from UTC
+            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
+
+            // Extract components from adjusted time
+            let year = adjustedTime.getUTCFullYear().toString().slice(-2);
+            let month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
+            let day = String(adjustedTime.getUTCDate()).padStart(2, '0');
             let yymmdd = `${year}${month}${day}`;
 
-            // Subtract 4 hours from UTC time
-            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
             let hours = adjustedTime.getUTCHours();
             const minutes = "30"; // Always use :30 minute mark
 
@@ -74,8 +77,11 @@
                 hours -= 1;
                 if (hours < 0) {
                     hours = 23;
-                    now.setUTCDate(now.getUTCDate() - 1);
-                    yymmdd = `${String(now.getUTCFullYear()).slice(-2)}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}`;
+                    adjustedTime.setUTCDate(adjustedTime.getUTCDate() - 1);
+                    year = adjustedTime.getUTCFullYear().toString().slice(-2);
+                    month = String(adjustedTime.getUTCMonth() + 1).padStart(2, '0');
+                    day = String(adjustedTime.getUTCDate()).padStart(2, '0');
+                    yymmdd = `${year}${month}${day}`;
                 }
                 attempts++;
             }
@@ -87,9 +93,9 @@
             // Debugging information display
             document.getElementById("debug-info").innerHTML = `
                 <strong>Debug Info:</strong><br>
-                UTC Year: ${year}<br>
-                UTC Month: ${month}<br>
-                UTC Day: ${day}<br>
+                Adjusted UTC Year: ${year}<br>
+                Adjusted UTC Month: ${month}<br>
+                Adjusted UTC Day: ${day}<br>
                 Adjusted UTC Hour: ${hours}<br>
                 Fixed Minutes: ${minutes}<br>
                 Attempts Made: ${attempts}<br>
@@ -99,6 +105,10 @@
 
         // Run script after page load
         window.onload = getLatestImageUrl;
+    </script>
+</body>
+</html>
+
     </script>
 </body>
 </html>
