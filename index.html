@@ -22,14 +22,9 @@
       border-radius: 5px;
       display: none;
     }
-    #debug-info {
-      font-size: 14px;
-      color: red;
-      background: #f8f8f8;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      word-wrap: break-word;
+    /* Optional: Remove or keep for internal debugging */
+    #debug-info, #image-url {
+      display: none;
     }
   </style>
 </head>
@@ -37,8 +32,8 @@
   <div id="satellite-widget">
     <h3>Latest SST Image - Cape Hatteras</h3>
     <img id="satellite-image" src="" alt="Loading Latest Satellite Image..."/>
-    <p id="image-url">Checking for latest available image...</p>
-    <div id="debug-info">Loading debug info...</div>
+    <p id="image-url"></p>
+    <div id="debug-info"></div>
   </div>
 
   <script>
@@ -82,7 +77,6 @@
       let adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000); // UTC-4
       let attempt = 0;
       const maxAttempts = 5;
-      let debug = "";
 
       while (attempt < maxAttempts) {
         const { hhmm, adjustedDate } = getNextHH30(new Date(adjusted));
@@ -93,16 +87,15 @@
         const dayOfYear = getDayOfYear(adjustedDate);
         const imageUrl = `${baseUrl}${yymmdd}.${dayOfYear}.${hhmm}.n00.jpg`;
 
-        debug += `Attempt ${attempt + 1}: ${imageUrl}<br>`;
-
         const exists = await imageExists(imageUrl);
         if (exists) {
           const img = document.getElementById("satellite-image");
           img.src = imageUrl;
           img.style.display = "block";
 
-          document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-          document.getElementById("debug-info").innerHTML = debug + "<strong>✅ Success</strong>";
+          // Optional display - disabled for production
+          // document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
+          // document.getElementById("debug-info").innerHTML = `✅ Loaded: ${imageUrl}`;
           return;
         }
 
@@ -113,11 +106,14 @@
       // If no valid image found
       document.getElementById("satellite-image").style.display = "none";
       document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
-      document.getElementById("debug-info").innerHTML = debug + "<strong>❌ No valid image found.</strong>";
+
+      // Optionally show failure info
+      // document.getElementById("debug-info").innerHTML = `❌ No image found after ${maxAttempts} attempts.`;
     }
 
     window.onload = getLatestSSTImage;
   </script>
 </body>
 </html>
+
 
