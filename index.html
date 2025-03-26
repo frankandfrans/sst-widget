@@ -5,17 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Latest SST Image</title>
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+    }
+
     #satellite-widget {
-      width: 100%;
-      max-width: 600px;
       text-align: center;
       font-family: Arial, sans-serif;
       border: 1px solid #ddd;
       padding: 10px;
-      margin-top: 20px;
       border-radius: 5px;
       box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+      max-width: 90vw;
+      max-height: 90vh;
     }
+
     img {
       width: 100%;
       height: auto;
@@ -88,10 +98,6 @@
           const img = document.getElementById("satellite-image");
           img.src = imageUrl;
           img.style.display = "block";
-
-          // Cleaned for production:
-          // document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-          // document.getElementById("debug-info").innerHTML = `✅ Success`;
           return;
         }
 
@@ -101,8 +107,6 @@
 
       // If no valid image found
       document.getElementById("satellite-image").style.display = "none";
-      // document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
-      // document.getElementById("debug-info").innerHTML = "❌ No valid image found.";
     }
 
     window.onload = getLatestSSTImage;
