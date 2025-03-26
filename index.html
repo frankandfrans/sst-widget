@@ -1,111 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latest SST Image</title>
-    <style>
-        #satellite-widget {
-            width: 100%;
-            max-width: 600px;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-        }
-        #debug-info {
-            font-size: 14px;
-            color: red;
-            background: #f8f8f8;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 5px;
-            word-wrap: break-word;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Latest SST Image</title>
+  <style>
+    #satellite-widget {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      font-family: Arial, sans-serif;
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+      display: none;
+    }
+    #debug-info {
+      font-size: 14px;
+      color: red;
+      background: #f8f8f8;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      word-wrap: break-word;
+    }
+  </style>
 </head>
 <body>
-    <div id="satellite-widget">
-        <h3>Latest SST Image - Cape Hatteras</h3>
-        <img id="satellite-image" src="" alt="Loading Latest Satellite Image...">
-        <p id="image-url"></p>
-        <div id="debug-info">Loading debug info...</div>
-    </div>
+  <div id="satellite-widget">
+    <h3>Latest SST Image - Cape Hatteras</h3>
+    <img id="satellite-image" src="" alt="Loading Latest Satellite Image..."/>
+    <p id="image-url">Checking for latest available image...</p>
+    <div id="debug-info">Loading debug info...</div>
+  </div>
 
-    <script>
-        async function getLatestImageUrl() {
-            let now = new Date();
-            let year = now.getUTCFullYear().toString().slice(-2);
-            let month = String(now.getUTCMonth() + 1).padStart(2, '0');
-            let day = String(now.getUTCDate()).padStart(2, '0');
-            let yymmdd = `${year}${month}${day}`;
+  <script>
+    function getDayOfYear(date) {
+      const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
+      const diff = date - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      return String(Math.floor(diff / oneDay)).padStart(3, '0');
+    }
 
-            // Subtract 4 hours from UTC time
-            let adjustedTime = new Date(now.getTime() - (4 * 60 * 60 * 1000));
-            let hours = adjustedTime.getUTCHours();
-            const minutes = "30"; // Always use :30 minute mark
+    function getRoundedHHMM(date) {
+      let hours = date.getUTCHours();
+      let minutes = date.getUTCMinutes();
 
-            let attempts = 0;
-            let maxAttempts = 5; // Try up to 5 hours back if needed
-            let imageUrl = "";
+      if (minutes === 0) {
+        hours += 1;
+      }
 
-            while (attempts < maxAttempts) {
-                let hhmm = `${String(hours).padStart(2, '0')}${minutes}`;
-                imageUrl = `https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/${yymmdd}.077.${hhmm}.n00.jpg`;
+      // Wrap around to next day
+      if (hours === 24) {
+        hours = 0;
+        date.setUTCDate(date.getUTCDate() + 1);
+      }
 
-                // Check if the URL is valid
-                try {
-                    let response = await fetch(imageUrl, { method: 'HEAD' });
-                    if (response.ok) {
-                        break; // Exit loop if the URL is valid
-                    }
-                } catch (error) {
-                    console.log("Error checking URL:", error);
-                }
+      return { hhmm: `${String(hours).padStart(2, '0')}30`, adjustedDate: date };
+    }
 
-                // If URL is not found, subtract 1 hour and try again
-                hours -= 1;
-                if (hours < 0) {
-                    hours = 23;
-                    now.setUTCDate(now.getUTCDate() - 1);
-                    yymmdd = `${String(now.getUTCFullYear()).slice(-2)}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}`;
-                }
-                attempts++;
-            }
+    async function getLatestSSTImage() {
+      let now = new Date();
+      let adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000); // UTC - 4h
+      const baseUrl = "https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
+      const maxAttempts = 5;
+      let attempt = 0;
+      let imageUrl = "";
+      let debug = "";
 
-            // Display the final image and URL
+      while (attempt < maxAttempts) {
+        const { hhmm, adjustedDate } = getRoundedHHMM(new Date(adjusted));
+        const year = adjustedDate.getUTCFullYear().toString().slice(-2);
+        const month = String(adjustedDate.getUTCMonth() + 1).padStart(2, "0");
+        const day = String(adjustedDate.getUTCDate()).padStart(2, "0");
+        const yymmdd = `${year}${month}${day}`;
+        const dayOfYear = getDayOfYear(adjustedDate);
+        imageUrl = `${baseUrl}${yymmdd}.${dayOfYear}.${hhmm}.n00.jpg`;
+
+        debug += `Attempt ${attempt + 1}: ${imageUrl}<br>`;
+
+        try {
+          const response = await fetch(imageUrl, { method: "HEAD" });
+          if (response.ok) {
             document.getElementById("satellite-image").src = imageUrl;
+            document.getElementById("satellite-image").style.display = "block";
             document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-
-            // Debugging information display
-            document.getElementById("debug-info").innerHTML = `
-                <strong>Debug Info:</strong><br>
-                UTC Year: ${year}<br>
-                UTC Month: ${month}<br>
-                UTC Day: ${day}<br>
-                Adjusted UTC Hour: ${hours}<br>
-                Fixed Minutes: ${minutes}<br>
-                Attempts Made: ${attempts}<br>
-                Final Image URL: <br> <a href="${imageUrl}" target="_blank">${imageUrl}</a>
-            `;
+            document.getElementById("debug-info").innerHTML = debug + `<strong>✅ Success</strong>`;
+            return;
+          }
+        } catch (err) {
+          debug += `❌ Error: ${err.message}<br>`;
         }
 
-        // Run script after page load
-        window.onload = getLatestImageUrl;
-    </script>
+        // Subtract 1 hour and try again
+        adjusted.setUTCHours(adjusted.getUTCHours() - 1);
+        attempt++;
+      }
+
+      // If no image was found after all attempts
+      document.getElementById("satellite-image").style.display = "none";
+      document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
+      document.getElementById("debug-info").innerHTML = debug + "<strong>❌ No valid image found.</strong>";
+    }
+
+    window.onload = getLatestSSTImage;
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
