@@ -49,62 +49,68 @@
       return String(Math.floor(diff / oneDay)).padStart(3, '0');
     }
 
-    function getRoundedHHMM(date) {
-      let hours = date.getUTCHours();
+    function getNextHH30(date) {
       let minutes = date.getUTCMinutes();
+      let hours = date.getUTCHours();
 
-      if (minutes === 0) {
-        hours += 1;
+      if (minutes >= 30) {
+        hours++;
+        if (hours === 24) {
+          hours = 0;
+          date.setUTCDate(date.getUTCDate() + 1);
+        }
       }
 
-      // Wrap around to next day
-      if (hours === 24) {
-        hours = 0;
-        date.setUTCDate(date.getUTCDate() + 1);
-      }
+      return {
+        hhmm: `${String(hours).padStart(2, '0')}30`,
+        adjustedDate: date
+      };
+    }
 
-      return { hhmm: `${String(hours).padStart(2, '0')}30`, adjustedDate: date };
+    async function imageExists(url) {
+      return await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+      });
     }
 
     async function getLatestSSTImage() {
+      const baseUrl = "https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
       let now = new Date();
-      let adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000); // UTC - 4h
-      const baseUrl = "marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
-      const maxAttempts = 5;
+      let adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000); // UTC-4
       let attempt = 0;
-      let imageUrl = "";
+      const maxAttempts = 5;
       let debug = "";
 
       while (attempt < maxAttempts) {
-        const { hhmm, adjustedDate } = getRoundedHHMM(new Date(adjusted));
+        const { hhmm, adjustedDate } = getNextHH30(new Date(adjusted));
         const year = adjustedDate.getUTCFullYear().toString().slice(-2);
         const month = String(adjustedDate.getUTCMonth() + 1).padStart(2, "0");
         const day = String(adjustedDate.getUTCDate()).padStart(2, "0");
         const yymmdd = `${year}${month}${day}`;
         const dayOfYear = getDayOfYear(adjustedDate);
-        imageUrl = `${baseUrl}${yymmdd}.${dayOfYear}.${hhmm}.n00.jpg`;
+        const imageUrl = `${baseUrl}${yymmdd}.${dayOfYear}.${hhmm}.n00.jpg`;
 
         debug += `Attempt ${attempt + 1}: ${imageUrl}<br>`;
 
-        try {
-          const response = await fetch(imageUrl, { method: "HEAD" });
-          if (response.ok) {
-            document.getElementById("satellite-image").src = imageUrl;
-            document.getElementById("satellite-image").style.display = "block";
-            document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-            document.getElementById("debug-info").innerHTML = debug + `<strong>✅ Success</strong>`;
-            return;
-          }
-        } catch (err) {
-          debug += `❌ Error: ${err.message}<br>`;
+        const exists = await imageExists(imageUrl);
+        if (exists) {
+          const img = document.getElementById("satellite-image");
+          img.src = imageUrl;
+          img.style.display = "block";
+
+          document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
+          document.getElementById("debug-info").innerHTML = debug + "<strong>✅ Success</strong>";
+          return;
         }
 
-        // Subtract 1 hour and try again
         adjusted.setUTCHours(adjusted.getUTCHours() - 1);
         attempt++;
       }
 
-      // If no image was found after all attempts
+      // If no valid image found
       document.getElementById("satellite-image").style.display = "none";
       document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
       document.getElementById("debug-info").innerHTML = debug + "<strong>❌ No valid image found.</strong>";
@@ -114,3 +120,4 @@
   </script>
 </body>
 </html>
+
