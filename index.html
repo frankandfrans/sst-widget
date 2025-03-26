@@ -22,18 +22,14 @@
       border-radius: 5px;
       display: none;
     }
-    /* Optional: Remove or keep for internal debugging */
-    #debug-info, #image-url {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <div id="satellite-widget">
     <h3>Latest SST Image - Cape Hatteras</h3>
-    <img id="satellite-image" src="" alt="Loading Latest Satellite Image..."/>
-    <p id="image-url"></p>
-    <div id="debug-info"></div>
+    <img id="satellite-image" src="" alt="Latest Sea Surface Temperature Image"/>
+    <!-- <p id="image-url"></p> -->
+    <!-- <div id="debug-info"></div> -->
   </div>
 
   <script>
@@ -93,9 +89,9 @@
           img.src = imageUrl;
           img.style.display = "block";
 
-          // Optional display - disabled for production
+          // Cleaned for production:
           // document.getElementById("image-url").textContent = `Image URL: ${imageUrl}`;
-          // document.getElementById("debug-info").innerHTML = `✅ Loaded: ${imageUrl}`;
+          // document.getElementById("debug-info").innerHTML = `✅ Success`;
           return;
         }
 
@@ -105,10 +101,8 @@
 
       // If no valid image found
       document.getElementById("satellite-image").style.display = "none";
-      document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
-
-      // Optionally show failure info
-      // document.getElementById("debug-info").innerHTML = `❌ No image found after ${maxAttempts} attempts.`;
+      // document.getElementById("image-url").textContent = "SEA SURFACE TEMP IS CURRENTLY NOT AVAILABLE";
+      // document.getElementById("debug-info").innerHTML = "❌ No valid image found.";
     }
 
     window.onload = getLatestSSTImage;
