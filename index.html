@@ -69,7 +69,7 @@
     async function getLatestSSTImage() {
       let now = new Date();
       let adjusted = new Date(now.getTime() - 4 * 60 * 60 * 1000); // UTC - 4h
-      const baseUrl = "https://marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
+      const baseUrl = "marine.rutgers.edu/cool/regions/capehat/sst/noaa/2025/img/";
       const maxAttempts = 5;
       let attempt = 0;
       let imageUrl = "";
