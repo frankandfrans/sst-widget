@@ -3,17 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Latest SST Image</title>
+  <title>Hatteras Island Sea Surface Temperatures</title>
   <style>
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       background: #ffffff;
       overflow: hidden;
+    }
+
+    h1 {
+      font-family: Arial, sans-serif;
+      font-size: 2em; /* Approx 32px */
+      color: #1a3263; /* Dark blue like the fishing report */
+      font-weight: bold;
+      text-align: center;
+      margin: 0 0 20px 0;
     }
 
     #satellite-widget {
@@ -29,11 +39,6 @@
       overflow: hidden;
     }
 
-    h3 {
-      margin: 0 0 10px 0;
-      font-size: 1.2em;
-    }
-
     img {
       max-width: 100%;
       max-height: 80vh;
@@ -44,11 +49,9 @@
   </style>
 </head>
 <body>
+  <h1>Hatteras Island Sea Surface Temperatures</h1>
   <div id="satellite-widget">
-    <h3>Latest SST Image - Cape Hatteras</h3>
     <img id="satellite-image" src="" alt="Latest Sea Surface Temperature Image"/>
-    <!-- <p id="image-url"></p> -->
-    <!-- <div id="debug-info"></div> -->
   </div>
 
   <script>
@@ -122,6 +125,7 @@
   </script>
 </body>
 </html>
+
 
 
 
